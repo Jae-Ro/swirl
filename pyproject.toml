@@ -3,9 +3,30 @@ name = "data-query-agent"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
+authors = [
+    { name = "Jae Ro", email = "jaero.gatech@gmail.com" }
+]
+
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "httpx>=0.28.1,<1.0.01",
+    "pydantic>=2.12.5,<3.0.0",
+    "quart>=0.20.0,<1.0.0",
+]
 
 [build-system]
-requires = ["uv_build>=0.9.17,<0.10.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+
+[dependency-groups]
+dev = [
+    "ruff"
+]
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "python-dotenv"
+]
+
+[tool.ruff]

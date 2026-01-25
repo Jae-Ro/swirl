@@ -55,7 +55,7 @@ line-length = 88
 indent-width = 4
 target-version = "py314"
 
-[too.ruff.lint]
+[tool.ruff.lint]
 ignore = ["F401"]
 fixable = ["ALL"]
 

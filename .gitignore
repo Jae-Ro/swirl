@@ -211,3 +211,4 @@ __marimo__/
 uv.lock
 !.env
 secrets.env
+package-lock.json

@@ -50,6 +50,7 @@ exclude = [
     ".venv", 
     ".vscode", 
     "__pypackages__",
+    "node_modules",
     "build", 
     "dist",
     "site-packages",

@@ -13,7 +13,6 @@ dependencies = [
     "langgraph>=1.0.7,<2.0.0",
     "litellm>=1.81.3,<2.0.0",
     "pydantic>=2.12.5,<3.0.0",
-    "quart>=0.20.0,<1.0.0",
 ]
 
 [dependency-groups]
@@ -24,6 +23,11 @@ test = [
     "pytest",
     "pytest-asyncio",
     "python-dotenv"
+]
+
+[project.optional-dependencies]
+app = [
+    "quart>=0.20.0,<1.0.0",
 ]
 
 [project.scripts]

@@ -10,5 +10,5 @@ Team Raft Take Home Challenge
 ```bash
 uv venv
 source .venv/bin/activate
-uv sync --all-groups
+uv sync --all-groups --extra app
 ```

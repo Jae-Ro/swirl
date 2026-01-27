@@ -5,7 +5,8 @@ class ColorFormatter(logging.Formatter):
     """Logging Formatter to add colors to the level while graying out metadata"""
 
     # color codes
-    dark_grey = "\x1b[38;5;245m"
+    grey = "\x1b[38;5;245m"
+    cyan = "\x1b[36;20m"
     blue = "\x1b[34;20m"
     green = "\x1b[32;20m"
     yellow = "\x1b[33;20m"
@@ -15,14 +16,14 @@ class ColorFormatter(logging.Formatter):
 
     def get_format(self, level_color):
         return (
-            f"{self.dark_grey}%(asctime)s %(name)s{self.reset} "
+            f"{self.grey}%(asctime)s{self.reset} "
+            f"{self.cyan}%(name)s{self.reset} "
             f"[{level_color}%(levelname)s{self.reset}] "
-            f"{self.dark_grey}%(filename)s:%(lineno)s{self.reset} "
+            f"{self.grey}%(filename)s:%(lineno)s{self.reset} "
             f"%(message)s"
         )
 
     def format(self, record):
-        # map levels to format strings
         formats = {
             logging.DEBUG: self.get_format(self.blue),
             logging.INFO: self.get_format(self.green),

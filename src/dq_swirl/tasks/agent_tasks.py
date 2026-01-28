@@ -34,8 +34,14 @@ async def run_dq_agent_task(ctx: Dict[str, Any], data: Dict[str, Any]):
         ## stream final llm response
         response = await llm_client.chat(
             messages=[
-                {"role": "system", "content": "You are a helpful assistant"},
-                {"role": "user", "content": req.prompt},
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant",
+                },
+                {
+                    "role": "user",
+                    "content": req.prompt,
+                },
             ],
             stream=True,
         )

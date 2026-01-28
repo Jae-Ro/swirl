@@ -11,4 +11,6 @@ Team Raft Take Home Challenge
 uv venv
 source .venv/bin/activate
 uv sync --all-groups --extra app --extra worker
+
+docker compose up
 ```

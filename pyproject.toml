@@ -9,11 +9,13 @@ authors = [
 
 requires-python = ">=3.14"
 dependencies = [
+    "boto3>=1.42.37",
     "httpx>=0.28.1,<1.0.01",
     "pydantic>=2.12.5,<3.0.0",
     "python-dotenv>=1.2.1,<2.0.0",
     "redis>=7.1.0,<8.0.0",
     "saq>=0.26.1,<1.0.0",
+    "virt-s3>=0.1.5",
 ]
 
 [dependency-groups]

@@ -2,6 +2,7 @@ import dataclasses
 import json
 import os
 import uuid
+import virt_s3
 from typing import Annotated, AsyncGenerator, Optional
 
 from dotenv import load_dotenv
@@ -60,11 +61,16 @@ async def setup_connections():
     redis_pw = os.getenv("REDIS_PW")
     redis_url = f"redis://:{redis_pw}@{redis_host}:{redis_port}"
 
-    # Initialize the primary Redis client for Pub/Sub and SAQ
+    # init the primary Redis client for Pub/Sub and SAQ
     redis_client = from_url(redis_url, decode_responses=False)
     task_queue = Queue.from_url(redis_url, name="ai-queue")
 
     logger.info("Successfully connected to Redis and SAQ Queue.")
+
+    # create s3 bucket
+    params = virt_s3.get_default_params()
+    with virt_s3.SessionManager(params=params) as session:
+        virt_s3.create_bucket("app-local", params=params, client=session)
 
 
 @app.after_serving

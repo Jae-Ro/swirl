@@ -1,5 +1,3 @@
-
-
 services:
   backend:
     container_name: app-backend
@@ -14,6 +12,11 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      S3_URL: http://s3:9000
+      S3_DEFAULT_BUCKET: app-local
+      AWS_SECRET_ACCESS_KEY: password
+      AWS_ACCESS_KEY_ID: admin
+      AWS_REGION: us-east-1
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
@@ -39,6 +42,11 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      S3_URL: http://s3:9000
+      S3_DEFAULT_BUCKET: app-local
+      AWS_SECRET_ACCESS_KEY: password
+      AWS_ACCESS_KEY_ID: admin
+      AWS_REGION: us-east-1
     restart: unless-stopped
     volumes:
       - ./src/:/app/src/
@@ -54,7 +62,7 @@ services:
   redis-insight:
     container_name: redis-insight
     image: redis/redisinsight:latest
-    restart: always
+    restart: unless-stopped
     ports: ["5540:5540"]
     depends_on:
       - redis
@@ -73,13 +81,29 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    volumes:
+      - ./db/init-permissions.sql:/docker-entrypoint-initdb.d/init-permissions.sql
 
   pgadmin4:
     container_name: pgadmin4
     image: elestio/pgadmin:latest
-    restart: always
+    restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: password
       PGADMIN_LISTEN_PORT: 8080
     ports: ["9090:8080"]
+  
+  s3:
+    container_name: s3
+    image: rustfs/rustfs:latest
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env_file:
+      - .env
+    volumes:
+      - ./.rustfs_data:/data
+      - ./.rustfs_logs:/logs
+    command: ["/data"]

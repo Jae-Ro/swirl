@@ -212,3 +212,6 @@ uv.lock
 !.env
 secrets.env
 package-lock.json
+
+.rustfs_data
+.rustfs_logs

@@ -31,9 +31,9 @@ app = [
     "hypercorn>=0.18.0,<1.0.0"
 ]
 
-worker = [
+agent = [
     "langgraph>=1.0.7,<2.0.0",
-    "litellm>=1.81.3,<2.0.0",
+    "litellm>=1.81.4,<2.0.0",
 ]
 
 [project.scripts]

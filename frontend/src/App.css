@@ -67,6 +67,13 @@
   overflow-wrap: normal;
   display: flex;
   flex-direction: column-reverse;
+  position: relative;
+}
+.markdown-container button {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .bubble-header {

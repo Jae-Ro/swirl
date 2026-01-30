@@ -1,0 +1,464 @@
+{
+    "fd116cd512d5ecd2e59edf12fc258b32": {
+        "signature": {
+            "buyer": "str",
+            "items": "str",
+            "location": "str",
+            "order": "str",
+            "total": "str"
+        },
+        "records": [
+            {
+                "raw": "Order 1001: Buyer=John Davis, Location=Columbus, OH, Total=$742.10, Items: laptop, hdmi cable",
+                "parsed": {
+                    "Buyer": "John Davis",
+                    "Items": "laptop, hdmi cable",
+                    "Location": "Columbus, OH",
+                    "Order": "1001",
+                    "Total": "$742.10"
+                }
+            },
+            {
+                "raw": "Order 1004:   Buyer=  AMANDA SMITH ,Location=Seattle, WA,Total=$50.00, Items: desk lamp",
+                "parsed": {
+                    "Buyer": "AMANDA SMITH",
+                    "Items": "desk lamp",
+                    "Location": "Seattle, WA",
+                    "Order": "1004",
+                    "Total": "$50.00"
+                }
+            },
+            {
+                "raw": "Order 1006: total=$89.99, location=Miami, FL, buyer=Elena Rossi, Items: keyboard",
+                "parsed": {
+                    "Items": "keyboard",
+                    "Order": "1006",
+                    "buyer": "Elena Rossi",
+                    "location": "Miami, FL",
+                    "total": "$89.99"
+                }
+            },
+            {
+                "raw": "Order 1007: Buyer=Chris P., Location=Denver, CO, Total=$12.00, Items: stickers -- [DISCOUNT APPLIED]",
+                "parsed": {
+                    "Buyer": "Chris P.",
+                    "Items": "stickers -- [DISCOUNT APPLIED]",
+                    "Location": "Denver, CO",
+                    "Order": "1007",
+                    "Total": "$12.00"
+                }
+            },
+            {
+                "raw": "Order 1008: Buyer=O'Connor, S., Location=Portland, OR, Total=$0.00, Items: ",
+                "parsed": {
+                    "Buyer": "O'Connor, S.",
+                    "Items": "None",
+                    "Location": "Portland, OR",
+                    "Order": "1008",
+                    "Total": "$0.00"
+                }
+            },
+            {
+                "raw": "Order 1011: Buyer=John Davis, Location=Columbus, OH, Total=$742.10, Items: laptop, hdmi cable",
+                "parsed": {
+                    "Buyer": "John Davis",
+                    "Items": "laptop, hdmi cable",
+                    "Location": "Columbus, OH",
+                    "Order": "1011",
+                    "Total": "$742.10"
+                }
+            },
+            {
+                "raw": "Order 1012: Buyer=Sarah Liu, Location=Austin, TX, Total=$156.55, Items: headphones",
+                "parsed": {
+                    "Buyer": "Sarah Liu",
+                    "Items": "headphones",
+                    "Location": "Austin, TX",
+                    "Order": "1012",
+                    "Total": "$156.55"
+                }
+            },
+            {
+                "raw": "Order 1013: Buyer=Mike Turner, Location=Cleveland, OH, Total=$1299.99, Items: gaming pc, mouse",
+                "parsed": {
+                    "Buyer": "Mike Turner",
+                    "Items": "gaming pc, mouse",
+                    "Location": "Cleveland, OH",
+                    "Order": "1013",
+                    "Total": "$1299.99"
+                }
+            },
+            {
+                "raw": "Order 1015: Buyer=Chris Myers, Location=Cincinnati, OH, Total=$512.00, Items: monitor, desk lamp",
+                "parsed": {
+                    "Buyer": "Chris Myers",
+                    "Items": "monitor, desk lamp",
+                    "Location": "Cincinnati, OH",
+                    "Order": "1015",
+                    "Total": "$512.00"
+                }
+            }
+        ]
+    },
+    "50eb97a85647221ecc7f65f74d68d156": {
+        "signature": {
+            "buyer": "str",
+            "items": "str",
+            "order": "str",
+            "total": "str"
+        },
+        "records": [
+            {
+                "raw": "Order 1005: Buyer=Raj Patel, Total=1,200.50, Items: monitor, stand, cable",
+                "parsed": {
+                    "Buyer": "Raj Patel",
+                    "Items": "monitor, stand, cable",
+                    "Order": "1005",
+                    "Total": "1,200.50"
+                }
+            },
+            {
+                "raw": "Order=1016, Buyer=Jake Myers, Total=$1,512.00, Items: monitor,",
+                "parsed": {
+                    "Buyer": "Jake Myers",
+                    "Items": "monitor",
+                    "Order": "1016",
+                    "Total": "$1,512.00"
+                }
+            }
+        ]
+    },
+    "28d9f3b14d0e5516a186062212502d0c": {
+        "signature": {
+            "buyer": "str",
+            "items": "str",
+            "locadtion": "str",
+            "order": "str",
+            "total": "str"
+        },
+        "records": [
+            {
+                "raw": "Order 1014: Buyer=Rachel Kim, Locadtion=Seattle, WA, Total=$89.50, Items: coffee maker",
+                "parsed": {
+                    "Buyer": "Rachel Kim",
+                    "Items": "coffee maker",
+                    "Locadtion": "Seattle, WA",
+                    "Order": "1014",
+                    "Total": "$89.50"
+                }
+            }
+        ]
+    },
+    "6f2b720d18e351508e6a8b520ae97f92": {
+        "signature": {
+            "maples": "str",
+            "name": "str"
+        },
+        "records": [
+            {
+                "raw": "Maples=Tree, Name:  Jae",
+                "parsed": {
+                    "Maples": "Tree",
+                    "Name": "Jae"
+                }
+            }
+        ]
+    },
+    "a0713c61038426204fef9da85c91686f": {
+        "signature": {
+            "id": "str",
+            "name": "str",
+            "role": "str",
+            "isactive": "bool",
+            "createdat": "str"
+        },
+        "records": [
+            {
+                "raw": "{\"id\": \"usr_001\", \"name\": \"Alex Johnson\", \"role\": \"admin\", \"isActive\": true, \"createdAt\": \"2025-11-02T09:14:23Z\"}",
+                "parsed": {
+                    "id": "usr_001",
+                    "name": "Alex Johnson",
+                    "role": "admin",
+                    "isActive": true,
+                    "createdAt": "2025-11-02T09:14:23Z"
+                }
+            }
+        ]
+    },
+    "4286ed8928a42e13682233f00079d106": {
+        "signature": {
+            "id": "str",
+            "name": "str",
+            "email": "str",
+            "role": "str",
+            "isactive": "NoneType",
+            "createdat": "str",
+            "lastloginip": "str"
+        },
+        "records": [
+            {
+                "raw": "{\"id\": \"usr_002\", \"name\": \"Maria Lopez\", \"email\": \"maria.lopez@example.com\", \"role\": \"editor\", \"isActive\": null, \"createdAt\": \"2025-12-18T16:47:10Z\", \"lastLoginIp\": \"192.168.1.42\"}",
+                "parsed": {
+                    "id": "usr_002",
+                    "name": "Maria Lopez",
+                    "email": "maria.lopez@example.com",
+                    "role": "editor",
+                    "isActive": null,
+                    "createdAt": "2025-12-18T16:47:10Z",
+                    "lastLoginIp": "192.168.1.42"
+                }
+            }
+        ]
+    },
+    "d5d811706d95e2f6c1b713aa3fd1d9ab": {
+        "signature": {
+            "id": "str",
+            "email": "str",
+            "role": "str",
+            "isactive": "bool",
+            "createdat": "str"
+        },
+        "records": [
+            {
+                "raw": "{\"id\": \"usr_003\", \"email\": \"samir.patel@example.com\", \"role\": \"viewer\", \"isActive\": false, \"createdAt\": \"08/05/2024\"}",
+                "parsed": {
+                    "id": "usr_003",
+                    "email": "samir.patel@example.com",
+                    "role": "viewer",
+                    "isActive": false,
+                    "createdAt": "08/05/2024"
+                }
+            }
+        ]
+    },
+    "2bcfb738a2056c5ef5543917c9f3ac53": {
+        "signature": {
+            "id": "int",
+            "name": "str",
+            "email": "str",
+            "isactive": "bool",
+            "createdat": "NoneType"
+        },
+        "records": [
+            {
+                "raw": "{\"id\": 4, \"name\": \"Chen Wei\", \"email\": \"chen.wei@example.com\", \"isActive\": true, \"createdAt\": null}",
+                "parsed": {
+                    "id": 4,
+                    "name": "Chen Wei",
+                    "email": "chen.wei@example.com",
+                    "isActive": true,
+                    "createdAt": null
+                }
+            }
+        ]
+    },
+    "d2d16f7c3698c6195ddaeb6205139150": {
+        "signature": {
+            "id": "str",
+            "name": "str",
+            "email": "str"
+        },
+        "records": [
+            {
+                "raw": "{\"id\": \"usr_005\", \"name\": \"Broken Record\", \"email\": \"broken@example.com\"}",
+                "parsed": {
+                    "id": "usr_005",
+                    "name": "Broken Record",
+                    "email": "broken@example.com"
+                }
+            }
+        ]
+    },
+    "3340e11ee417dd9f9cab0fd70836ccb4": {
+        "signature": {
+            "hobby": "str",
+            "id": "str",
+            "name": "str"
+        },
+        "records": [
+            {
+                "raw": "name =Sam, hobby = computers, id=1",
+                "parsed": {
+                    "hobby": "computers",
+                    "id": "1",
+                    "name": "Sam"
+                }
+            },
+            {
+                "raw": "name=Sam, hobby=computers, id=1",
+                "parsed": {
+                    "hobby": "computers",
+                    "id": "1",
+                    "name": "Sam"
+                }
+            },
+            {
+                "raw": "name = Sam, hobby = computers, id = 1",
+                "parsed": {
+                    "hobby": "computers",
+                    "id": "1",
+                    "name": "Sam"
+                }
+            }
+        ]
+    },
+    "ce59f3f30262af34c2a4b11cec9950dd": {
+        "signature": {
+            "product": "str",
+            "version": "str"
+        },
+        "records": [
+            {
+                "raw": "version: 3, product: software",
+                "parsed": {
+                    "product": "software",
+                    "version": "3"
+                }
+            }
+        ]
+    },
+    "6e1f3e68f259f916acfb5dec4affefdd": {
+        "signature": {
+            "user.id": "int",
+            "user.name": "str",
+            "user.profile.age": "int",
+            "user.profile.hobbies": "list[str]",
+            "user.profile.address.street": "str",
+            "user.profile.address.city": "str",
+            "user.profile.address.zip": "str",
+            "orders[].order_id": "int",
+            "orders[].items": "list[str]",
+            "orders[].total": "float",
+            "active": "bool"
+        },
+        "records": [
+            {
+                "raw": "{\"user\":{\"id\":123,\"name\":\"Alice\",\"profile\":{\"age\":30,\"hobbies\":[\"reading\",\"cycling\",\"coding\"],\"address\":{\"street\":\"123 Main St\",\"city\":\"Metropolis\",\"zip\":\"12345\"}}},\"orders\":[{\"order_id\":1001,\"items\":[\"book\",\"pen\"],\"total\":25.5},{\"order_id\":1002,\"items\":[\"laptop\"],\"total\":1200.0}],\"active\":true}",
+                "parsed": {
+                    "user": {
+                        "id": 123,
+                        "name": "Alice",
+                        "profile": {
+                            "age": 30,
+                            "hobbies": [
+                                "reading",
+                                "cycling",
+                                "coding"
+                            ],
+                            "address": {
+                                "street": "123 Main St",
+                                "city": "Metropolis",
+                                "zip": "12345"
+                            }
+                        }
+                    },
+                    "orders": [
+                        {
+                            "order_id": 1001,
+                            "items": [
+                                "book",
+                                "pen"
+                            ],
+                            "total": 25.5
+                        },
+                        {
+                            "order_id": 1002,
+                            "items": [
+                                "laptop"
+                            ],
+                            "total": 1200.0
+                        }
+                    ],
+                    "active": true
+                }
+            }
+        ]
+    },
+    "9b23b611f9d66003ee4dc322078b992e": {
+        "signature": {
+            "user_id": "str"
+        },
+        "records": [
+            {
+                "raw": "2026-01-30 14:22:01 INFO User login successful user_id=123",
+                "parsed": {
+                    "user_id": "123"
+                }
+            }
+        ]
+    },
+    "c2aebc126ff252eb9dae084d659d2cab": {
+        "signature": {
+            "id": "str",
+            "level": "str",
+            "user": "str"
+        },
+        "records": [
+            {
+                "raw": "level =INFO, user =Sam, id=1",
+                "parsed": {
+                    "id": "1",
+                    "level": "INFO",
+                    "user": "Sam"
+                }
+            }
+        ]
+    },
+    "74db6b18a3e440d4dd054614492fa510": {
+        "signature": {
+            "action": "str",
+            "level": "str",
+            "success": "str",
+            "timestamp": "str",
+            "user": "str"
+        },
+        "records": [
+            {
+                "raw": "timestamp=2026-01-30T14:22:01Z level=INFO user=alice action=login success=true",
+                "parsed": {
+                    "action": "login",
+                    "level": "INFO",
+                    "success": "true",
+                    "timestamp": "2026-01-30T14:22:01Z",
+                    "user": "alice"
+                }
+            }
+        ]
+    },
+    "d0f1c5f0782666cd8324b4cf57a3159d": {
+        "signature": {
+            "cpu_usage": "str",
+            "level": "str",
+            "memory": "str"
+        },
+        "records": [
+            {
+                "raw": "level=INFO cpu_usage=1,234.56 memory=512MB",
+                "parsed": {
+                    "cpu_usage": "1,234.56",
+                    "level": "INFO",
+                    "memory": "512MB"
+                }
+            }
+        ]
+    },
+    "e8b13b0b419896ad0f402c15a762e2c1": {
+        "signature": {
+            "level": "str",
+            "service": "str",
+            "order_id": "int",
+            "status": "str"
+        },
+        "records": [
+            {
+                "raw": "{\"level\":\"INFO\",\"service\":\"orders\",\"order_id\":1001,\"status\":\"created\"}",
+                "parsed": {
+                    "level": "INFO",
+                    "service": "orders",
+                    "order_id": 1001,
+                    "status": "created"
+                }
+            }
+        ]
+    }
+}

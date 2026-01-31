@@ -1,8 +1,8 @@
-# This file tells your IDE what the Rust binary actually contains
-from typing import Any, List
+from typing import Any, Dict, List, Tuple
 
-def smart_parse_batch(batch: List[str]) -> List[dict[str, Any]]:
+def smart_parse_batch(batch: List[str]) -> List[Tuple[str, Dict[str, Any]]]:
     """
-    Function to parse a list of strings into a list of grammar parsed dictionaries using parallel Rust execution (Rayon).
+    Function to parse a list of strings into a list of tuples (original string, grammar parsed dict).
+    * Utilizes parallel Rust execution (Rayon).
     """
     ...

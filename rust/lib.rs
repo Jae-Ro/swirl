@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::PyDict; // PyTuple removed here
+use pyo3::IntoPyObject; 
 use pest::Parser;
 use pest_derive::Parser;
 use rayon::prelude::*;
@@ -15,35 +16,32 @@ static SPLIT_PATTERN: OnceLock<Regex> = OnceLock::new();
 
 #[pyfunction]
 pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<PyAny>>> {
-    let header_fix = HEADER_FIX.get_or_init(|| Regex::new(r"(?P<name>[a-zA-Z]+)\s+(?P<id>\d+):\s*").unwrap());
+    let header_fix = HEADER_FIX.get_or_init(|| {
+        Regex::new(r"(?P<name>[a-zA-Z]+)\s+(?P<id>\d+):\s*").unwrap()
+    });
     
-    // Rust doesn't support lookahead. We match the pattern that STARTS with the separator.
-    let split_pattern = SPLIT_PATTERN.get_or_init(|| Regex::new(r"(?:,\s*|\s+)[a-zA-Z_]\w*\s*[:=]").unwrap());
+    let split_pattern = SPLIT_PATTERN.get_or_init(|| {
+        Regex::new(r"(?:,\s*|\s+)[a-zA-Z_]\w*\s*[:=]").unwrap()
+    });
 
-    let processed_data: Vec<(Vec<(String, String)>, Vec<String>)> = py.detach(|| {
+    let processed_data: Vec<(String, Vec<(String, String)>, Vec<String>)> = py.detach(|| {
         logs.par_iter()
             .map(|raw_str| {
                 let mut extracted = Vec::new();
                 let mut unparsed_segments = Vec::new();
 
-                // 1. Header Fix (re.sub)
                 let content = header_fix.replace_all(raw_str, "$name=$id, ").to_string();
 
-                // 2. Split into segments (mimicking re.split lookahead)
                 let mut segments = Vec::new();
                 let mut last = 0;
                 for mat in split_pattern.find_iter(&content) {
                     segments.push(&content[last..mat.start()]);
-                    
-                    // We split at the separator, but the Key/Delimiter part of the match 
-                    // belongs to the NEXT segment. We find where the non-whitespace starts.
                     let match_str = mat.as_str();
                     let key_start_offset = match_str.find(|c: char| c.is_alphanumeric() || c == '_').unwrap_or(0);
                     last = mat.start() + key_start_offset;
                 }
                 segments.push(&content[last..]);
 
-                // 3. Process each segment
                 for seg in segments {
                     let seg_trimmed = seg.trim();
                     if seg_trimmed.is_empty() { continue; }
@@ -53,9 +51,8 @@ pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<P
                         let mut inner = pair.into_inner();
                         
                         let k = inner.next().unwrap().as_str().to_string();
-                        let _delim = inner.next().unwrap(); // We don't need the delimiter string
+                        let _delim = inner.next().unwrap();
                         
-                        // VALUE transform logic: .rstrip(",").strip() or "None"
                         let v = inner.next()
                             .map(|val| {
                                 let s = val.as_str().trim();
@@ -70,14 +67,13 @@ pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<P
                     }
                 }
 
-                (extracted, unparsed_segments)
+                (raw_str.clone(), extracted, unparsed_segments)
             })
             .collect()
     });
 
-    // 4. Final Dict Build
     let mut results = Vec::with_capacity(processed_data.len());
-    for (pairs, unparsed) in processed_data {
+    for (original_str, pairs, unparsed) in processed_data {
         let dict = PyDict::new(py);
         for (k, v) in pairs {
             let _ = dict.set_item(k, v);
@@ -85,7 +81,10 @@ pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<P
         if !unparsed.is_empty() {
             let _ = dict.set_item("_unparsed", unparsed.join(" "));
         }
-        results.push(dict.into_any().unbind());
+        
+        // Convert the Rust tuple (String, Bound<PyDict>) into a Python tuple
+        let log_tuple = (original_str, dict).into_pyobject(py)?;
+        results.push(log_tuple.into_any().unbind());
     }
 
     Ok(results)

@@ -3,7 +3,6 @@ from typing import Any, Dict, Optional, Tuple
 
 from lark import Lark, Transformer, v_args
 
-
 DEFAULT_GRAMMAR = r"""
     pair: KEY DELIMITER [VALUE]
     KEY: /[a-zA-Z_]\w*/
@@ -14,16 +13,15 @@ DEFAULT_GRAMMAR = r"""
 """
 
 
-class LogTransformer(Transformer):
-    # maps the children of the 'pair' rule directly to func args
+class KeyValueTransformer(Transformer):
     @v_args(inline=True)
-    def pair(self, key: Any, delimiter: str, value=None) -> Tuple[str, Any]:
-        """_summary_
+    def pair(self, key: str, delimiter: str, value: str = None) -> Tuple[str, Any]:
+        """Method to transform a Lark 'pair' match into a clean key-value tuple
 
-        :param key: _description_
-        :param delimiter: _description_
-        :param value: _description_, defaults to None
-        :return: _description_
+        :param key: identified key from the string segment
+        :param delimiter: separator found (e.g., ':', '=', or whitespace)
+        :param value: content following the delimiter, defaults to None
+        :return: tuple containing the string key and its cleaned value or "None"
         """
         k = str(key)
         v = "None"
@@ -33,44 +31,55 @@ class LogTransformer(Transformer):
 
 
 class GrammarParser:
-    """_summary_"""
-
     def __init__(self, grammar_override: Optional[str] = None) -> None:
-        """_summary_
+        """Init method for GrammarParser
 
-        :param grammar_override: _description_, defaults to None
+        :param grammar_override: pass in your own grammar rules string, defaults to None
         """
-        self.pair_grammar = DEFAULT_GRAMMAR
-        if grammar_override:
-            self.pair_grammar = grammar_override
+        self.pair_grammar = grammar_override or DEFAULT_GRAMMAR
+        self.pair_parser = Lark(self.pair_grammar, start="pair", parser="lalr")
+        self.transformer = KeyValueTransformer()
 
-        self.pair_parser = Lark(
-            self.pair_grammar,
-            start="pair",
-            parser="lalr",
-        )
-        # create one instance of the transformer to reuse
-        self.transformer = LogTransformer()
+        # pre-compile regex
+        self.header_fix = re.compile(r"([a-zA-Z]+)\s+(\d+):\s*")
+        self.splitter = re.compile(r"(?:,\s*|\s+)(?=[a-zA-Z_]\w*\s*[:=])")
 
     def smart_parse(self, raw_str: str) -> Dict[str, Any]:
-        """_summary_
+        """Entrypoint method for string parsing. Assumes there is some key value pair structure in the string.
 
-        :param raw_str: _description_
-        :return: _description_
+        Primary Functions:
+        * normalizes headers
+        * splits line into logical segments
+        * attempts to extract key-value pairs
+
+        :param raw_str: The raw string to be processed
+        :return: dictionary of extracted key-value pairs, plus an '_unparsed'
+            field for any data that didn't match the key, value pair schema
         """
         extracted = {}
-        content = re.sub(r"([a-zA-Z]+)\s+(\d+):\s*", r"\1=\2, ", raw_str)
-        segments = re.split(r"(?:,\s*|\s+)(?=[a-zA-Z_]\w*\s*[:=])", content)
+        unparsed_segments = []
+
+        # headers
+        content = self.header_fix.sub(r"\1=\2, ", raw_str)
+        # segment split
+        segments = self.splitter.split(content)
 
         for seg in segments:
             seg = seg.strip()
             if not seg:
                 continue
+
             try:
+                # k,v pairs
                 tree = self.pair_parser.parse(seg)
                 k, v = self.transformer.transform(tree)
                 extracted[k] = v
             except Exception:
-                continue
+                # unparsed segments
+                unparsed_segments.append(seg)
 
-        return dict(sorted(extracted.items()))
+        # making single field called "_unparsed"
+        if unparsed_segments:
+            extracted["_unparsed"] = " ".join(unparsed_segments)
+
+        return extracted

@@ -1,3 +1,4 @@
+import json
 import re
 from typing import Any, Dict, Optional, Tuple
 
@@ -23,7 +24,6 @@ class KeyValueTransformer(Transformer):
         :param value: content following the delimiter, defaults to None
         :return: tuple containing the string key and its cleaned value or "None"
         """
-        # enforce lowercase fields
         k = str(key).lower()
         v = "None"
         if value:
@@ -38,15 +38,42 @@ class GrammarParser:
         :param grammar_override: pass in your own grammar rules string, defaults to None
         """
         self.pair_grammar = grammar_override or DEFAULT_GRAMMAR
-        self.pair_parser = Lark(self.pair_grammar, start="pair", parser="lalr")
+        self.pair_parser = Lark(self.pair_grammar, start="pair", parser="earley")
         self.transformer = KeyValueTransformer()
 
         # pre-compile regex
         self.header_fix = re.compile(r"([a-zA-Z]+)\s+(\d+):\s*")
         self.splitter = re.compile(r"(?:,\s*|\s+)(?=[a-zA-Z_]\w*\s*[:=])")
 
+    def _try_parse_json(self, trimmed: str) -> Optional[Dict[str, Any]]:
+        """Helper function to parse stringified JSON objects/arrays
+
+        :param trimmed: stringified JSON
+        :return: python dictionary representation from `json.loads()`
+        """
+        if not (
+            (trimmed.startswith("{") and trimmed.endswith("}"))
+            or (trimmed.startswith("[") and trimmed.endswith("]"))
+        ):
+            return None
+
+        try:
+            data = json.loads(trimmed)
+            if isinstance(data, dict):
+                # normalize keys to lowercase and values to strings to match Lark output
+                return {str(k).lower(): str(v) for k, v in data.items()}
+            elif isinstance(data, list):
+                # wrap arrays to maintain a KV structure
+                return {"json_data": trimmed}
+        except (json.JSONDecodeError, TypeError):
+            return None
+        return None
+
     def smart_parse(self, raw_str: str) -> Dict[str, Any]:
-        """Entrypoint method for string parsing. Assumes there is some key value pair structure in the string.
+        """Entrypoint method for string parsing.
+
+        Assumptions:
+        * there exists some key value pair structure in the string.
 
         Primary Functions:
         * normalizes headers
@@ -57,12 +84,20 @@ class GrammarParser:
         :return: dictionary of extracted key-value pairs, plus an '_unparsed'
             field for any data that didn't match the key, value pair schema
         """
+        trimmed = raw_str.strip()
+
+        # json
+        json_result = self._try_parse_json(trimmed)
+        if json_result is not None:
+            return json_result
+
+        # key value pair string
         extracted = {}
         unparsed_segments = []
 
-        # headers
+        # normalize headers
         content = self.header_fix.sub(r"\1=\2, ", raw_str)
-        # segment split
+        # split segments
         segments = self.splitter.split(content)
 
         for seg in segments:
@@ -79,7 +114,6 @@ class GrammarParser:
                 # unparsed segments
                 unparsed_segments.append(seg)
 
-        # making single field called "_unparsed"
         if unparsed_segments:
             extracted["_unparsed"] = " ".join(unparsed_segments)
 

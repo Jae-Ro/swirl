@@ -6,6 +6,7 @@ use pest_derive::Parser;
 use rayon::prelude::*;
 use regex::Regex;
 use std::sync::OnceLock;
+use serde_json::Value;
 
 #[derive(Parser)]
 #[grammar = "rust/grammar.pest"]
@@ -13,6 +14,36 @@ pub struct KVParser;
 
 static HEADER_FIX: OnceLock<Regex> = OnceLock::new();
 static SPLIT_PATTERN: OnceLock<Regex> = OnceLock::new();
+
+/// helper function to handle the JSON Fast Path
+fn try_parse_json(trimmed: &str) -> Option<Vec<(String, String)>> {
+    // Quick exit if it doesn't look like JSON
+    if !((trimmed.starts_with('{') && trimmed.ends_with('}')) || 
+         (trimmed.starts_with('[') && trimmed.ends_with(']'))) {
+        return None;
+    }
+
+    // attempt to load JSON
+    let json_val: Value = serde_json::from_str(trimmed).ok()?;
+
+    match json_val {
+        Value::Object(map) => {
+            let extracted = map.into_iter().map(|(k, v)| {
+                let v_str = match v {
+                    Value::String(s) => s,
+                    _ => v.to_string(),
+                };
+                (k.to_lowercase(), v_str)
+            }).collect();
+            Some(extracted)
+        },
+        Value::Array(_) => {
+            // Treat the whole array as a single entry to keep KV structure
+            Some(vec![("json_data".to_string(), trimmed.to_string())])
+        },
+        _ => None,
+    }
+}
 
 #[pyfunction]
 pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<PyAny>>> {
@@ -24,11 +55,18 @@ pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<P
         Regex::new(r"(?:,\s*|\s+)[a-zA-Z_]\w*\s*[:=]").unwrap()
     });
 
-    // We process the strings in parallel. 
-    // The keys are lowercased here to distribute the workload.
+    // parallel processing
     let processed_data: Vec<(String, Vec<(String, String)>, Vec<String>)> = py.detach(|| {
         logs.par_iter()
             .map(|raw_str| {
+                let trimmed = raw_str.trim();
+
+                // --- JSON PATH ---
+                if let Some(extracted) = try_parse_json(trimmed) {
+                    return (raw_str.clone(), extracted, Vec::new());
+                }
+
+                // --- Key Value Pair PATH (fallback) ---
                 let mut extracted = Vec::new();
                 let mut unparsed_segments = Vec::new();
 
@@ -51,8 +89,6 @@ pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<P
                     if let Ok(mut pairs) = KVParser::parse(Rule::pair_segment, seg_trimmed) {
                         let pair = pairs.next().unwrap();
                         let mut inner = pair.into_inner();
-                        
-                        // KEY NORMALIZATION: to_lowercase() called here
                         let k = inner.next().unwrap().as_str().to_lowercase();
                         let _delim = inner.next().unwrap();
                         
@@ -75,18 +111,17 @@ pub fn smart_parse_batch(py: Python<'_>, logs: Vec<String>) -> PyResult<Vec<Py<P
             .collect()
     });
 
+    // python dict construction (Back on the Main Thread/GIL)
     let mut results = Vec::with_capacity(processed_data.len());
     for (original_str, pairs, unparsed) in processed_data {
         let dict = PyDict::new(py);
         for (k, v) in pairs {
-            // Keys are already lowercase from the parallel step
             let _ = dict.set_item(k, v);
         }
         if !unparsed.is_empty() {
             let _ = dict.set_item("_unparsed", unparsed.join(" "));
         }
         
-        // Wrap the original log and the parsed dict into a Python tuple
         let log_tuple = (original_str, dict).into_pyobject(py)?;
         results.push(log_tuple.into_any().unbind());
     }

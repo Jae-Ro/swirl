@@ -5,3 +5,9 @@ __pycache__/
 .git/
 *.env
 .models/
+target/
+build/
+dist/
+.ruff_cache/
+.rustfs_data/
+.rustfs_logs/

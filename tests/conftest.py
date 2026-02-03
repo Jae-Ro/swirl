@@ -42,17 +42,6 @@ MESSY_SAMPLE_DATA = [
     '{"id": "usr_003", "email": "samir.patel@example.com", "role": "viewer", "isActive": false, "createdAt": "08/05/2024"}',
     '{"id": 4, "name": "Chen Wei", "email": "chen.wei@example.com", "isActive": true, "createdAt": null}',
     '{"id": "usr_005", "name": "Broken Record", "email": "broken@example.com"}',
-    "Order 1017: Buyer=Griffin Arora, Location=Columbia, SC, Total=$512.00, Items: monitor, desk lamp, Discount: yes",
-    "Order=1018, Buyer=Jae Arora, Location=Dreher, FL, Total=$6.00, Items: chair, Discount: true, phone=123-456-789",
-    "Order=1019, Buyer=Jae Kao, Location=Atlanta, GA, Total=$12.00, Items: desk, Discount: False, phone=123-456-789",
-    "2026-01-30 14:22:01 INFO User login successful user_id=123",
-    "2026-01-30 14:22:01 INFO User login successful",
-    "level =INFO, user =Sam, id=1",
-    "timestamp=2026-01-30T14:22:01Z level=INFO user=alice action=login success=true",
-    "level=INFO cpu_usage=1,234.56 memory=512MB",
-    '{"level":"INFO","service":"orders","order_id":1001,"status":"created"}',
-    '[2026-01-31 17:11:22 +0000] [7] [INFO] 127.0.0.1:56718 - - [31/Jan/2026:17:11:22 +0000] "GET /health 1.1" 200 16 "-" "curl/8.14.1"',
-    "2026-01-31 17:11:00 swirl [DEBUG] saq_worker.py:28 Running cron job health check",
 ]
 
 

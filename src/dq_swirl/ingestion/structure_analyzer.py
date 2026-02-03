@@ -1,5 +1,24 @@
 import hashlib
-from typing import Any, Dict
+from dataclasses import dataclass
+from typing import Any, Dict, List, TypedDict
+
+
+class Fingerprint(TypedDict):
+    hash: str
+    signature: Dict[str, Any]
+    score: float
+    full_str: str
+
+
+class RawParsedPair(TypedDict):
+    raw: str
+    parsed: Dict[str, Any]
+
+
+@dataclass(slots=True)
+class SignatureEntry:
+    signature: Dict[str, Any]
+    records: List[RawParsedPair]
 
 
 class StructuralAnalyzer:
@@ -8,15 +27,7 @@ class StructuralAnalyzer:
     Signature Map Structure:
     ```python
     {
-        <hash>: {
-            "structure": <Dict>,
-            "records": [
-                {
-                    "raw": <str>,
-                    "parsed": <Dict>
-                }
-            ]
-        }
+        <hash>: <SignatureEntry>
     }
     ```
     """
@@ -26,7 +37,7 @@ class StructuralAnalyzer:
 
         :param ignore_unparsed: boolean flag to ignore the "_unparsed" field or not, defaults to False
         """
-        self.signature_map = {}
+        self.signature_map: Dict[str, SignatureEntry] = {}
         self.ignore_unparsed = ignore_unparsed
 
     def _get_type(self, value: Any) -> str:
@@ -46,6 +57,13 @@ class StructuralAnalyzer:
             # list is empty
             return "list[empty_null]"
         return type(value).__name__
+
+    def get_signature_map(self) -> Dict[str, SignatureEntry]:
+        """Getter method for signature map
+
+        :return: self.signature_map
+        """
+        return self.signature_map
 
     def flatten_and_type(
         self,
@@ -110,7 +128,7 @@ class StructuralAnalyzer:
         raw_input: str,
         parsed_dict: Dict[str, Any],
         store_in_map: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> Fingerprint:
         """Method to generate a deterministic hash based on structure, while tracking parseability.
 
         :param raw_input: original raw string input
@@ -137,25 +155,23 @@ class StructuralAnalyzer:
         full_str = f"{blueprint_str}|parse_score:{score}"
 
         if store_in_map:
-            # store the signature and its metadata
-            self.signature_map[struct_hash] = self.signature_map.get(
-                struct_hash,
-                {
-                    "signature": {},
-                    "records": [],
-                },
-            )
-            self.signature_map[struct_hash]["signature"] = typed_map
-            self.signature_map[struct_hash]["records"].append(
-                {
-                    "raw": raw_input,
-                    "parsed": parsed_dict,
-                }
-            )
+            new_record: RawParsedPair = {
+                "raw": raw_input,
+                "parsed": parsed_dict,
+            }
+            if struct_hash not in self.signature_map:
+                self.signature_map[struct_hash] = SignatureEntry(
+                    signature=typed_map,
+                    records=[new_record],
+                )
+            else:
+                self.signature_map[struct_hash].records.append(new_record)
 
-        return {
+        fingerprint: Fingerprint = {
             "hash": struct_hash,
             "signature": typed_map,
             "score": score,
             "full_str": full_str,
         }
+
+        return fingerprint

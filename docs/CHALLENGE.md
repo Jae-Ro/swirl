@@ -20,7 +20,7 @@ Given a dummy “customer” API that returns unstructured text about orders, bu
 
 ### Constraints
 - Use LangChain or LangGraph.
-- Use `openai/gpt-oss-120b:exacto` from [openrouter.ai](https://openrouter.ai/). (if you run out of free credits or need an api key, email us at mlteam@teamraft.com)
+- Use `openai/gpt-oss-120b:exacto` from [openrouter.ai](https://openrouter.ai/).
 - Provide architecture diagram (simple text is fine).
 - Include logging and error handling.
 - Must run with one command: npm start or python main.py.
@@ -33,7 +33,7 @@ Given a dummy “customer” API that returns unstructured text about orders, bu
 
 ### Above and Beyond. 
 
-At Raft, we highly value taking the extra step to ensure that we deliver great technology. Here are some ideas if you want to take the extra step here: 
+Here are some ideas if you want to take the extra step here: 
 - Any simple user interface
 - Extend the data, or build simple statistical models (think linear regression), to add some simple traditional predictive system into this system.
 

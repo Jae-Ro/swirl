@@ -18,14 +18,21 @@ class AsyncLLMClient:
         self,
         model: str,
         api_base: str,
+        api_key: Optional[str] = None,
     ) -> None:
         """Method to init the AsyncLLMClient with default model and API settings.
 
         :param model: default model identifier (e.g., "openai/google/gemma-3-27b-it")
         :param api_base: base URL for the LLM API provider (e.g., "http://localhost:8000/v1")
+        :param api_key: optional parameter for LLM API Key
         """
         self.model = model
         self.api_base = api_base
+        self._api_key = api_key
+
+        if self._api_key is None:
+            # placeholder
+            self._api_key = "123"
 
     def __repr__(self):
         return f"AsyncLLMClient(base_url={self.api_base}, model={self.model})"
@@ -62,7 +69,7 @@ class AsyncLLMClient:
             api_base = base_url_override
 
         # handle api key override
-        api_key = os.getenv("LLM_API_KEY", "123")
+        api_key = self._api_key
         if api_key_override:
             api_key = api_key_override
 

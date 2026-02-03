@@ -1,12 +1,40 @@
 import os
+from dataclasses import dataclass, field
 from typing import AsyncIterable, Dict, List, Optional
 
 import litellm
-from litellm import CustomStreamWrapper, ModelResponse
+from litellm import ModelResponse
 
 from dq_swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
+
+
+@dataclass(slots=True, frozen=True)
+class LLMConfig:
+    """Configuration dataclass for LLM client
+
+    :param model: default model identifier (e.g., "openai/google/gemma-3-27b-it")
+    :param base_url: base URL for the LLM API provider (e.g., "http://localhost:8000/v1")
+    :param api_key: optional parameter for LLM API Key
+    """
+
+    model: str = field(
+        default_factory=lambda: os.getenv(
+            "LLM_MODEL",
+        )
+    )
+    base_url: str = field(
+        default_factory=lambda: os.getenv(
+            "LLM_BASE_URL",
+        )
+    )
+    api_key: str = field(
+        default_factory=lambda: os.getenv(
+            "LLM_API_KEY",
+            "123",
+        )
+    )
 
 
 class AsyncLLMClient:
@@ -14,28 +42,19 @@ class AsyncLLMClient:
     A high-level asynchronous client for interacting with Large Language Models via LiteLLM.
     """
 
-    def __init__(
-        self,
-        model: str,
-        api_base: str,
-        api_key: Optional[str] = None,
-    ) -> None:
+    def __init__(self, config: Optional[LLMConfig] = None) -> None:
         """Method to init the AsyncLLMClient with default model and API settings.
 
-        :param model: default model identifier (e.g., "openai/google/gemma-3-27b-it")
-        :param api_base: base URL for the LLM API provider (e.g., "http://localhost:8000/v1")
-        :param api_key: optional parameter for LLM API Key
+        :param config: instance of LLMConfig
         """
-        self.model = model
-        self.api_base = api_base
-        self._api_key = api_key
+        self.config = config
 
-        if self._api_key is None:
-            # placeholder
-            self._api_key = "123"
+        # if not provided, try to create one from ENV vars
+        if self.config is None:
+            self.config = LLMConfig()
 
     def __repr__(self):
-        return f"AsyncLLMClient(base_url={self.api_base}, model={self.model})"
+        return f"AsyncLLMClient({self.config})"
 
     async def chat(
         self,
@@ -59,17 +78,17 @@ class AsyncLLMClient:
         :return: either instance of litellm.ModelResponse or AsyncIterable where each item is of type litellm.ModelResponse
         """
         # handle model override
-        model = self.model
+        model = self.config.model
         if model_override:
             model = model_override
 
         # handle api url override
-        api_base = self.api_base
+        api_base = self.config.base_url
         if base_url_override:
             api_base = base_url_override
 
         # handle api key override
-        api_key = self._api_key
+        api_key = self.config.api_key
         if api_key_override:
             api_key = api_key_override
 

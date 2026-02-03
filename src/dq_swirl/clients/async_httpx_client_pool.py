@@ -44,7 +44,11 @@ async def create_async_httpx_client_pool(
             max_connections=max_connections,
             max_keepalive_connections=max_keepalive_connections,
         ),
-        timeout=httpx.Timeout(60.0, connect=timeout_connect, read=timeout_read),
+        timeout=httpx.Timeout(
+            60.0,
+            connect=timeout_connect,
+            read=timeout_read,
+        ),
         event_hooks={
             "response": [log_response_info],
         },

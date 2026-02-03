@@ -34,6 +34,7 @@ async def startup(ctx: Dict[str, Any]):
     # httpx pool
     pool = await create_async_httpx_client_pool()
     litellm.aclient_session = pool
+    litellm.num_retries = 5
     ctx["httpx_pool"] = pool
 
     # redis pool

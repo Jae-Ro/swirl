@@ -59,9 +59,9 @@ build-backend = "maturin"
 
 [tool.maturin]
 python-source = "src" 
-module-name = "dq_swirl.rust_ingestion"
+module-name = "dq_swirl.ingestion.rust_ingestion"
 features = ["pyo3/extension-module"]
-include = ["src/dq_swirl/*.pyi"]
+include = ["src/dq_swirl/ingestion/*.pyi"]
 
 [tool.ruff]
 exclude = [

@@ -19,7 +19,9 @@ DEFAULT_LLM_API_KEY = os.getenv("LLM_API_KEY", "123")
 LLM_CONFIGS = [
     pytest.param(
         LLMConfig(
-            model=DEFAULT_MODEL, base_url=DEFAULT_LLM_URL, api_key=DEFAULT_LLM_API_KEY
+            model=DEFAULT_MODEL,
+            base_url=DEFAULT_LLM_URL,
+            api_key=DEFAULT_LLM_API_KEY,
         )
     )
 ]

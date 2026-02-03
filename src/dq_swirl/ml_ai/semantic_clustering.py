@@ -1,11 +1,11 @@
 from typing import Dict, List, TypedDict
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
 from sklearn.cluster import HDBSCAN
 from transformers import logging as transformers_logging
 
 from dq_swirl.ingestion.structure_analyzer import SignatureEntry
+from dq_swirl.ml_ai.embedding_model import EmbeddingModel, load_sentence_transformer
 
 transformers_logging.set_verbosity_error()
 
@@ -24,7 +24,7 @@ class SemanticClusterData(TypedDict):
 class SemanticClusterer:
     def __init__(
         self,
-        embedding_model: str | SentenceTransformer = "all-MiniLM-L6-v2",
+        embedding_model: str | EmbeddingModel = "all-MiniLM-L6-v2",
         model_cache_dir: str = "./.models",
         min_cluster_size: int = 2,
         min_samples: int = 1,
@@ -56,7 +56,7 @@ class SemanticClusterer:
 
         # init embedding model if not passed in
         if isinstance(embedding_model, str):
-            self.embedding_model = SentenceTransformer(self.embedding_model)
+            self.embedding_model = load_sentence_transformer(self.embedding_model)
 
         # init clusterer
         self.clusterer = HDBSCAN(

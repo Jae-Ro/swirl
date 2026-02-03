@@ -238,6 +238,7 @@ class ETLBuilderAgent:
             samples=samples,
             feedback=feedback,
         )
+        print(prompt)
         buffer = []
         response = await self.client.chat(
             messages=[
@@ -295,7 +296,7 @@ class ETLBuilderAgent:
 
             for mapped_dict in mapped_batch:
                 model.model_validate(mapped_dict)
-                logger.debug(f"Input: {mapped_dict} -- PASSED")
+                logger.debug(f"PASSED: {mapped_dict}")
 
             logger.debug(f"Successful Parsing Code:\n{parser_code}")
 
@@ -305,7 +306,7 @@ class ETLBuilderAgent:
 
         except Exception as e:
             try:
-                logger.warning(f"Input: {mapped_dict} -- FAILED")
+                logger.warning(f"FAILED: {mapped_dict}")
             except Exception:
                 pass
             finally:

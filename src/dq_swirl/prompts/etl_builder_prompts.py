@@ -20,7 +20,7 @@ REQUIREMENTS:
 10. NEVER set potentially boolean fields as optional. Instead, when not explicitly declared, infer as to what the default value ought based on the semantic meaning of the field and how it appears in the samples that do provide it.
 11. Perform semantic merging: Identify fields across structural variants that share the same intent and conjoin them under a single, definitive schema key to avoid redundancy (e.g., "location" vs "city", "state", "zip code")
 12. Avoid information loss when it comes to key:value pairs in the sample data.
-13. If [EXECUTION FEEDBACK] section is populated, make sure to apply that feedback into your model generation process.
+13. If [EXECUTION FEEDBACK] is not "N/A," treat it as a diagnostic: analyze the underlying logic failure and re-architect the design to solve the root cause rather than just patching the symptom.
 
 Return ONLY the Python code for the class. Include necessary imports (from pydantic import BaseModel, Field, etc.).
 """

@@ -1,11 +1,10 @@
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Tuple, TypedDict
-
-from sentence_transformers import SentenceTransformer
+from typing import Any, Dict, List, Tuple
 
 from dq_swirl.ingestion.structure_analyzer import SignatureEntry
-from dq_swirl.ml_ai.semantic_clustering import SemanticClusterData, SemanticClusterer
-from dq_swirl.ml_ai.structure_clustering import StructClusterData, StructureClusterer
+from dq_swirl.ml_ai.embedding_model import EmbeddingModel
+from dq_swirl.ml_ai.semantic_clustering import SemanticClusterer
+from dq_swirl.ml_ai.structure_clustering import StructureClusterer
 
 
 @dataclass(slots=True)
@@ -48,7 +47,7 @@ class ClusterOrchestrator:
         self,
         structure_cluster_params: StructureClusterParams = StructureClusterParams(),
         semantic_cluster_params: SemanticClusterParams = SemanticClusterParams(),
-        embedding_model: str | SentenceTransformer = "all-MiniLM-L6-v2",
+        embedding_model: str | EmbeddingModel = "all-MiniLM-L6-v2",
     ) -> None:
         """_summary_
 

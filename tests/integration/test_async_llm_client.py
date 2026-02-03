@@ -14,7 +14,12 @@ class TestAsyncLLMClient:
         client = AsyncLLMClient(config=config)
 
         resp = await client.chat(
-            messages=[{"role": "user", "content": "hello"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": "hello",
+                }
+            ],
             stream=False,
             max_tokens=100,
         )
@@ -28,7 +33,12 @@ class TestAsyncLLMClient:
         client = AsyncLLMClient(config=config)
 
         resp = await client.chat(
-            messages=[{"role": "user", "content": "hello"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": "hello",
+                }
+            ],
             stream=True,
             max_tokens=100,
         )

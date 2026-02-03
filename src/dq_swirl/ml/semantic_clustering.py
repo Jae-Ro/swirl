@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
+import numpy as np
+from sentence_transformers import SentenceTransformer
 from sklearn.cluster import HDBSCAN
+from transformers import logging as transformers_logging
 
 from dq_swirl.ingestion.structure_analyzer import SignatureEntry
-from sentence_transformers import SentenceTransformer
-from transformers import logging as transformers_logging
-import numpy as np
 
 transformers_logging.set_verbosity_error()
 

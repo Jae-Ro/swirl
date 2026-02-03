@@ -62,3 +62,4 @@ class TestETLBuilderAgent:
         logger.debug(
             f"CODING RUNTIME: {round(end - start, 2)} seconds for {len(messy_data)} samples!"
         )
+        assert len(export_map) > 1

@@ -139,10 +139,9 @@ class ETLBuilderAgent:
             feedback = "N/A"
 
         # diversity is key to generalize
-        samples = json.dumps(
-            [p.parsed for p in data_records[: self.max_sample_size]], indent=2
-        )
-        logger.debug(samples)
+        sample_li = [p.parsed for p in data_records[: self.max_sample_size]]
+        samples = json.dumps(sample_li, indent=2)
+        logger.debug(f"Input SubSample: \n{json.dumps(sample_li[:3], indent=2)}")
 
         prompt = ARCHITECT_PROMPT.format(
             samples=samples,
@@ -238,7 +237,6 @@ class ETLBuilderAgent:
             samples=samples,
             feedback=feedback,
         )
-        print(prompt)
         buffer = []
         response = await self.client.chat(
             messages=[

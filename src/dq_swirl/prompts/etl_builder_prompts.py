@@ -14,7 +14,7 @@ REQUIREMENTS:
 4. Do NOT include any regex or define a configuration class.
 5. Attempt to capture all of the nuanced features from the sample data into your model as fields (e.g., special feature tags that exist within strings can be extracted as a separate field for the model).
 6. You MUST wrap your code in a python block with the following start marking "```python" and end marking "```".
-7. Create supplemental BaseModel classes where necessary to preserve semantic clarity.
+7. Create ONLY one BaseModel class.
 8. You are ONLY allowed to use the following imports: "from typing import List, Dict, Optional; from pydantic import BaseModel, Field".
 9. Keep primary keys as type string.
 10. Infer best data type from string value (e.g., money should be a float, "true/false" or "yes/no" fields should be a boolean, and fields that represent multiple entities should use a representative aggregate data structure type)

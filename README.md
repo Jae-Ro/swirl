@@ -30,3 +30,7 @@ python dummy_customer_api.py
 ```
 
 Navigate to [htttp://localhost:3000](htttp://localhost:3000) and ask your queries there!
+
+
+## System Architecture
+![system architecture](docs/sa_diagram.drawio.svg)

@@ -1,4 +1,4 @@
-from dq_swirl.persistence.signature_registry import SignatureRegistry
+from dq_swirl.persistence.signature_registry import SignatureMetadata, SignatureRegistry
 from dq_swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
@@ -23,4 +23,10 @@ class TestRedisSignatureRegistry:
         # read and validate
         cand_hash = "50eb97a85647221ecc7f65f74d68d156"
         res = await registry.lookup_hash_signature(cand_hash)
-        logger.debug(res)
+        assert isinstance(res, SignatureMetadata)
+        logger.debug(res.model_dump_json(indent=4))
+        # get similar hashes
+        similar = await registry.get_similar_signatures(cand_hash)
+        logger.debug(f"Similar Hashes: {similar}")
+        assert len(similar) > 0
+        assert cand_hash not in similar

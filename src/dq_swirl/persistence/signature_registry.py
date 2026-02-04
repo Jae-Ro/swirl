@@ -116,7 +116,6 @@ class SignatureRegistry:
             raise RuntimeError("No redis connection!")
 
         metadata_to_store = {}
-        clusters = {}
 
         # validation
         for sign, metadata_dict in etl_lookup_map.items():

@@ -57,7 +57,7 @@ class TestETLBuilderAgent:
 
         start = end
 
-        export_map = await agent.run(cluster_map)
+        export_map, cluster_sets = await agent.run(cluster_map)
 
         end = time.time()
         logger.debug(
@@ -66,3 +66,4 @@ class TestETLBuilderAgent:
         assert len(export_map) > 1
 
         logger.debug(f"ETL Lookup Map:\n{json.dumps(export_map, indent=4)}")
+        logger.debug(f"Cluster Sets:\n{json.dumps(cluster_sets, indent=4)}")

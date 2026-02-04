@@ -6,7 +6,7 @@ import os
 import traceback
 from datetime import datetime
 from io import BytesIO
-from typing import Annotated, Any, Dict, List, Literal, Optional, TypedDict
+from typing import Annotated, Any, Dict, List, Literal, Optional, Tuple, TypedDict
 
 import virt_s3
 from langgraph.checkpoint.memory import MemorySaver
@@ -25,6 +25,49 @@ from dq_swirl.utils.agent_utils import extract_python_code
 from dq_swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
+
+
+class ETLMap(TypedDict):
+    semantic_cluster_id: str
+    structure_cluster_id: str
+    base_model_fpath: str
+    parser_fpath: str
+    fields: List[str]
+
+
+def create_etl_lookup(
+    export_map: Dict[str, Any],
+) -> Tuple[Dict[str, List[str]], Dict[str, ETLMap]]:
+    """_summary_
+
+    :param export_map: _description_
+    :return: _description_
+    """
+    metadata_map = {}
+    cluster_sets = {}
+
+    for sem_id, cluster_dict in export_map.items():
+        base_fpath = cluster_dict["base_model_fpath"]
+
+        for struct_cluster in cluster_dict["structure_clusters"]:
+            struct_id = struct_cluster["id"]
+            parser_fpath = struct_cluster["parser_fpath"]
+            records = struct_cluster["struct_records"]
+
+            all_signs = [rec["signature_hash"] for rec in records]
+            cluster_sets[struct_id] = all_signs
+
+            for struct_dict in records:
+                sign = struct_dict["signature_hash"]
+                metadata_map[sign] = {
+                    "semantic_cluster_id": sem_id,
+                    "structure_cluster_id": struct_id,
+                    "base_fpath": base_fpath,
+                    "parser_fpath": parser_fpath,
+                    "fields": struct_dict["fields"],
+                }
+
+    return metadata_map, cluster_sets
 
 
 class ModelResponseStructure(BaseModel):
@@ -337,7 +380,7 @@ class ETLBuilderAgent:
         dir_name = "data/pipeline_runs"
         dir_name = os.path.join(
             dir_name,
-            f"run_{self.curr_dt_str}",
+            self.run_id,
             f"sem_{semantic_cluster_id}-{base_model_name}",
         )
 
@@ -447,9 +490,20 @@ class ETLBuilderAgent:
         # default to retrying the coder for CODE_ISSUE or unknown errors
         return "coder"
 
-    async def run(self, cluster_dict: Dict[str, List[ClusterRecord]]):
-        # current datetime
-        self.curr_dt_str = datetime.now().strftime("%Y%m%d-%H%M%S")
+    async def run(
+        self, cluster_dict: Dict[str, List[ClusterRecord]], run_id: Optional[str] = None
+    ) -> Tuple[Dict[str, List[str]], Dict[str, ETLMap]]:
+        """_summary_
+
+        :param cluster_dict: _description_
+        :param run_id: _description_, defaults to None
+        :return: _description_
+        """
+        if run_id is None:
+            # current datetime
+            curr_dt_str = datetime.now().strftime("%Y%m%d-%H%M%S")
+            self.run_id = f"run_{curr_dt_str}"
+
         shared_export_map = {}
 
         for sem_id, records in cluster_dict.items():
@@ -485,4 +539,4 @@ class ETLBuilderAgent:
                     f"--- Finished Sem{sem_id}-Struct{struct_id} ---\n{json.dumps(shared_export_map, indent=4)}"
                 )
 
-        return shared_export_map
+        return create_etl_lookup(shared_export_map)

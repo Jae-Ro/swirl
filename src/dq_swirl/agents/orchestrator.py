@@ -306,7 +306,8 @@ class DQAgentOrchestrator:
 
                     # create dirs locally
                     Path(base_model_local_fpath).parent.mkdir(
-                        parents=True, exist_ok=True
+                        parents=True,
+                        exist_ok=True,
                     )
                     Path(parser_local_fpath).parent.mkdir(parents=True, exist_ok=True)
 

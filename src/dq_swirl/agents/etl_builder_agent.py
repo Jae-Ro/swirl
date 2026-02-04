@@ -534,5 +534,6 @@ class ETLBuilderAgent:
                 clusters,
                 etl_map,
             )
+            await registry.close()
 
         return clusters, etl_map

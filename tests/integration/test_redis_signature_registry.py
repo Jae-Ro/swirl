@@ -30,3 +30,5 @@ class TestRedisSignatureRegistry:
         logger.debug(f"Similar Hashes: {similar}")
         assert len(similar) > 0
         assert cand_hash not in similar
+
+        await registry.close()

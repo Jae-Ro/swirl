@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import operator
 import os
-import random
 import traceback
 from datetime import datetime
-from functools import wraps
 from io import BytesIO
 from typing import Annotated, Any, Dict, List, Literal, Optional, Tuple, TypedDict
 
@@ -26,19 +23,10 @@ from dq_swirl.prompts.etl_builder_prompts import (
     CODE_EXECUTION_PROMPT,
     CODER_PROMPT,
 )
-from dq_swirl.utils.agent_utils import extract_python_code
+from dq_swirl.utils.agent_utils import extract_python_code, prepause
 from dq_swirl.utils.log_utils import get_custom_logger
 
 logger = get_custom_logger()
-
-
-def prepause(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        await asyncio.sleep(random.uniform(0.2, 0.5))
-        return await func(*args, **kwargs)
-
-    return wrapper
 
 
 class ModelResponseStructure(BaseModel):
@@ -164,6 +152,7 @@ class ETLBuilderAgent:
         samples = json.dumps(sample_li, indent=2)
         logger.debug(f"Input SubSample: \n{json.dumps(sample_li[:3], indent=2)}")
 
+        logger.info("[Architect] Generating BaseModel Class ...")
         prompt = ARCHITECT_PROMPT.format(
             samples=samples,
             feedback=feedback,
@@ -256,6 +245,7 @@ class ETLBuilderAgent:
             indent=2,
         )
 
+        logger.info("[Coder] Generating Transformation Function ...")
         prompt = CODER_PROMPT.format(
             schema=schema,
             samples=samples,

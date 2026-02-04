@@ -1,5 +1,14 @@
 FROM python:3.14-slim AS builder
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.local/bin:/root/.cargo/bin:$PATH"
+
 # uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -11,8 +20,13 @@ RUN uv venv
 
 COPY app/ ./app/
 COPY src/ ./src/
-COPY pyproject.toml ./
-RUN uv sync --extra app
+COPY rust/ ./rust/
+COPY pyproject.toml Cargo.toml README.md ./
+
+RUN uv tool install maturin
+ENV PATH="/root/.local/bin:$PATH" 
+
+RUN uv sync --extra app && maturin develop --release
 RUN uv pip list
 
 FROM python:3.14-slim AS final

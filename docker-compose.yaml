@@ -9,6 +9,7 @@ services:
     ports: ["5000:5000"]
     env_file:
       - secrets.env
+      - .env
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379

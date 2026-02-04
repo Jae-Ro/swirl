@@ -10,8 +10,8 @@ EXECUTION FEEDBACK:
 REQUIREMENTS:
 1. Normalization: Suggest clean, snake_case keys for the identified fields.
 2. Determine what fields should be required vs optional based on overall semantic meaning of the entity you are creating a BaseModel class for.
-3. Include a detailed description for each field using the `Field` class to explain what the field is and if there are any expected structural patterns (e.g., `state` should be two letters).
-4. Do NOT include any regex.
+3. Include a very detailed description for each field using the `Field` class to explain what the field is and if there are any expected structural patterns (e.g., `state` should be two letters).
+4. Do NOT include any regex or define a configuration class.
 5. Attempt to capture all of the nuanced features from the sample data into your model as fields (e.g., special feature tags that exist within strings can be extracted as a separate field for the model).
 6. You MUST wrap your code in a python block with the following start marking "```python" and end marking "```".
 7. Create supplemental BaseModel classes where necessary to preserve semantic clarity.

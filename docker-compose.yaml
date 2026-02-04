@@ -52,6 +52,19 @@ services:
       - ./src/:/app/src/
       - ./worker/:/app/worker/
   
+  frontend:
+    container_name: app-frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: app-frontend:latest
+    entrypoint: ["nginx", "-g", "daemon off;"]
+    ports: ["3000:80"]
+    environment:
+      VITE_API_URL: http://app-backend:5000
+    restart: unless-stopped
+    
+  
   redis:
     container_name: redis
     image: redis:latest

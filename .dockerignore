@@ -12,3 +12,5 @@ dist/
 .rustfs_data/
 .rustfs_logs/
 *.so
+node_modules/
+frontend/node_modules/

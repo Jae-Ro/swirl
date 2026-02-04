@@ -13,3 +13,9 @@ uv sync --all-groups --extra app --extra worker && maturin develop --release
 
 docker compose up
 ```
+
+### (Optional) Run Test Suite
+While you have docker compose running in one terminal, in another run the following:
+```bash
+pytest -v -s tests/
+```

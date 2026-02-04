@@ -77,7 +77,7 @@ class SignatureRegistry:
         cluster_sets = {}
 
         for sem_id, cluster_dict in export_map.items():
-            base_fpath = cluster_dict["base_model_fpath"]
+            base_model_fpath = cluster_dict["base_model_fpath"]
 
             for struct_cluster in cluster_dict["structure_clusters"]:
                 struct_id = struct_cluster["id"]
@@ -92,7 +92,7 @@ class SignatureRegistry:
                     metadata_map[sign] = {
                         "semantic_cluster_id": sem_id,
                         "structure_cluster_id": struct_id,
-                        "base_fpath": base_fpath,
+                        "base_model_fpath": base_model_fpath,
                         "parser_fpath": parser_fpath,
                         "fields": struct_dict["fields"],
                     }
@@ -103,13 +103,18 @@ class SignatureRegistry:
         self,
         etl_lookup_map: Dict[str, ETLMap],
         clusters: Dict[str, List[str]],
+        ttl_seconds: int = 86400,
     ) -> None:
         """_summary_
 
         :param etl_lookup_map: _description_
-        :param cluster_sets: _description_
+        :param clusters: _description_
+        :param ttl_seconds: _description_, defaults to 86400
         :return: _description_
         """
+        if not self.redis:
+            raise RuntimeError("No redis connection!")
+
         metadata_to_store = {}
         clusters = {}
 
@@ -131,6 +136,7 @@ class SignatureRegistry:
                     self.meta_key,
                     mapping=metadata_to_store,
                 )
+                pipe.expire(self.meta_key, ttl_seconds)
 
             for sig, hashes in clusters.items():
                 cluster_key = f"{self.cluster_prefix}{sig}"
@@ -138,6 +144,7 @@ class SignatureRegistry:
                 pipe.delete(cluster_key)
                 # add hash signatures
                 pipe.sadd(cluster_key, *hashes)
+                pipe.expire(cluster_key, ttl_seconds)
 
             await pipe.execute()
 

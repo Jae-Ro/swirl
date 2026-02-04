@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import operator
 import os
+import random
 import traceback
 from datetime import datetime
+from functools import wraps
 from io import BytesIO
 from typing import Annotated, Any, Dict, List, Literal, Optional, Tuple, TypedDict
 
@@ -33,6 +36,15 @@ class ETLMap(TypedDict):
     base_model_fpath: str
     parser_fpath: str
     fields: List[str]
+
+
+def prepause(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        await asyncio.sleep(random.uniform(0.2, 0.5))
+        return await func(*args, **kwargs)
+
+    return wrapper
 
 
 def create_etl_lookup(
@@ -160,6 +172,7 @@ class ETLBuilderAgent:
 
         return workflow.compile(checkpointer=MemorySaver())
 
+    @prepause
     async def architect_node(self, state: MultiAgentState) -> Dict[str, Any]:
         """_summary_
 
@@ -231,6 +244,7 @@ class ETLBuilderAgent:
             f"[Scehma Tester] Validating Functional BaseModel. Attempt: {state['attempts']}"
         )
         python_base_model_str = state["gold_schema"].code_string
+        attempts = state["attempts"]
 
         env = {}
         try:
@@ -243,6 +257,7 @@ class ETLBuilderAgent:
 
             return {
                 "feedback": "SUCCESS",
+                "attempts": -1 * attempts,
             }
 
         except Exception as e:
@@ -254,6 +269,7 @@ class ETLBuilderAgent:
                 "error_type": "SCHEMA_ISSUE",
             }
 
+    @prepause
     async def coder_node(self, state: MultiAgentState) -> Dict[str, Any]:
         """_summary_
 
@@ -367,7 +383,7 @@ class ETLBuilderAgent:
         """
 
         # get necesary fields
-        semantic_cluster_id = state["semantic_cluster_id"]
+        sem_id = state["semantic_cluster_id"]
         structure_cluster_id = state["structure_cluster_id"]
         data_pairs_structure = state["data_pairs_structure"]
         base_model_name = state["gold_schema"].entrypoint_class_name.lower()
@@ -381,7 +397,7 @@ class ETLBuilderAgent:
         dir_name = os.path.join(
             dir_name,
             self.run_id,
-            f"sem_{semantic_cluster_id}-{base_model_name}",
+            f"sem_{sem_id}-{base_model_name}",
         )
 
         # create bytesio objects to upload
@@ -408,7 +424,10 @@ class ETLBuilderAgent:
             )
             logger.info(f"Exported: {base_model_fpath}")
             virt_s3.upload_data(
-                parser_bytesio, parser_fpath, params=s3_params, client=session
+                parser_bytesio,
+                parser_fpath,
+                params=s3_params,
+                client=session,
             )
             logger.info(f"Exported: {parser_fpath}")
 
@@ -425,14 +444,14 @@ class ETLBuilderAgent:
                 )
                 seen[rec.signature_hash] = 1
 
-        export_map[semantic_cluster_id] = export_map.get(semantic_cluster_id, {})
-        export_map[semantic_cluster_id]["base_model_fpath"] = export_map[
-            semantic_cluster_id
-        ].get("base_model_fpath", base_model_fpath)
-        export_map[semantic_cluster_id]["structure_clusters"] = export_map[
-            semantic_cluster_id
-        ].get("structure_clusters", [])
-        export_map[semantic_cluster_id]["structure_clusters"].append(
+        export_map[sem_id] = export_map.get(
+            sem_id,
+            {
+                "base_model_fpath": base_model_fpath,
+                "structure_clusters": [],
+            },
+        )
+        export_map[sem_id]["structure_clusters"].append(
             {
                 "id": structure_cluster_id,
                 "parser_fpath": parser_fpath,

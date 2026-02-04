@@ -19,3 +19,14 @@ While you have docker compose running in one terminal, in another run the follow
 ```bash
 pytest -v -s tests/
 ```
+
+
+## Testing It Out
+
+After following the Developer Quickstart `docker compose up`, start the dummy customer api.
+
+```bash
+python dummy_customer_api.py
+```
+
+Navigate to [htttp://localhost:3000](htttp://localhost:3000) and ask your queries there!

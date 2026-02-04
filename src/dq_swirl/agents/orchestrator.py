@@ -371,7 +371,18 @@ class DQAgentOrchestrator:
             }
 
     async def validate_etl_runner(self, state: AgentOrchestratorState):
-        return "end"
+        res = state["step_result"]
+        err_msg = state["error"]
+        attempts = state["attempts"]
+
+        # data sourcer did not work
+        if not res and err_msg:
+            if attempts > self.max_attempts:
+                return "end"
+            return "retry"
+
+        # it worked
+        return "continue"
 
     @prepause
     async def query_builder_agent(self, state: AgentOrchestratorState):

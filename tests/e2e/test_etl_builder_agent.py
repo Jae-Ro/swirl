@@ -1,3 +1,4 @@
+import json
 import time
 from collections import Counter
 from typing import List
@@ -63,3 +64,5 @@ class TestETLBuilderAgent:
             f"CODING RUNTIME: {round(end - start, 2)} seconds for {len(messy_data)} samples!"
         )
         assert len(export_map) > 1
+
+        logger.debug(f"ETL Lookup Map:\n{json.dumps(export_map, indent=4)}")

@@ -13,13 +13,13 @@ logger = get_custom_logger()
 class TestClusterOrchestrator:
     async def test_string_clustering(self, messy_data: List[str]):
         # grammar parsing
-        logger.debug(f"Running Grammar Parsing")
+        logger.debug("Running Grammar Parsing")
         samples = smart_parse_batch(messy_data)
         assert len(samples) == len(messy_data)
         assert len(samples[0]) == 2
 
         # structural analyzer
-        logger.debug(f"Running Structure Analyzer")
+        logger.debug("Running Structure Analyzer")
         analyzer = StructuralAnalyzer()
         for raw, parsed in samples:
             analyzer.generate_fingerprint(raw, parsed, store_in_map=True)
@@ -28,7 +28,7 @@ class TestClusterOrchestrator:
         assert len(signature_map) > 0
 
         # clustering
-        logger.debug(f"Running Clustering")
+        logger.debug("Running Clustering")
         cluster_op = ClusterOrchestrator()
         cluster_map = cluster_op.make_clusters(signature_map)
         cluster_map_dump = json.dumps(cluster_map, cls=DataclassEncoder, indent=4)

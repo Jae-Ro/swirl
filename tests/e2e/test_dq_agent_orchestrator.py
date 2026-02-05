@@ -30,4 +30,9 @@ class TestDQAgentOrchestrator:
             "method": "GET",
             "request_body": None,
         }
-        await agent.run(request_config, user_query="Hi", data_key="raw_orders")
+        query = "Show me all orders where the buyer was located in Ohio and total value was over 500"
+        await agent.run(
+            request_config,
+            user_query=query,
+            data_key="raw_orders",
+        )

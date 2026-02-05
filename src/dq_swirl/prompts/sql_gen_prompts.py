@@ -1,4 +1,3 @@
-
 PGDUCKDB_PROMPT = """You are a senior data engineer and analyst specialized in PostgreSQL and the pg_duckdb extension.
 Your goal is to translate a [USER QUERY] into a high-performance SQL query based on the provided [TABLE SCHEMA].
 

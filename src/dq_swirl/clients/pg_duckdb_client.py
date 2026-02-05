@@ -63,9 +63,9 @@ class PGDuckDBClient:
             )
 
     def _configure_connection(self, conn: psycopg.Connection):
-        """
-        Configures EVERY new connection.
-        Note: We set autocommit=True temporarily to allow CREATE EXTENSION.
+        """_summary_
+
+        :param conn: _description_
         """
         old_autocommit = conn.autocommit
 
@@ -319,12 +319,16 @@ class PGDuckDBClient:
         self,
         query_sql: str,
         params: Any = None,
-        peek: bool = True,
+        peek: bool = False,
         schema_name: str = "duckdb",
     ) -> Any:
-        """
-        Executes a query. If schema_name is provided, it sets the search_path
-        for this session to prioritize that schema.
+        """_summary_
+
+        :param query_sql: _description_
+        :param params: _description_, defaults to None
+        :param peek: _description_, defaults to False
+        :param schema_name: _description_, defaults to "duckdb"
+        :return: _description_
         """
         with self.pool.connection() as conn:
             conn.row_factory = dict_row

@@ -1,4 +1,4 @@
-# DQ Swirl
+# 🌀 DQ Swirl
 
 Agentic Data Quality & Querying
 

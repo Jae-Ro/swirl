@@ -35,12 +35,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN useradd -m appuser
-
 WORKDIR /app
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-COPY --from=builder --chown=appuser:appuser /app /app
+COPY --from=builder /app /app
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH="/app/.venv/lib/python3.14/site-packages" \
@@ -48,6 +46,6 @@ ENV PATH="/app/.venv/bin:$PATH" \
 
 RUN uv pip install ./dist/*.whl --no-deps --no-cache
 
-USER appuser
+RUN mkdir -p .models
 
 CMD ["saq", "worker.saq_worker.settings"]

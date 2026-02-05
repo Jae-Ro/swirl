@@ -93,14 +93,21 @@ class PGDuckDBClient:
             return False
 
     def create_table_from_model(
-        self, model_class: Type[BaseModel], table_name: str = None
+        self,
+        model_class: Type[BaseModel],
+        table_name: str = None,
+        schema_name: str = "duckdb",
     ):
         """_summary_
 
         :param model_class: _description_
+        :param schema_name: _description_, defaults to "duckdb"
         :param table_name: _description_, defaults to None
         """
-        table_name = table_name or model_class.__name__.lower()
+        if not isinstance(model_class, type):
+            model_class = model_class.__class__
+
+        actual_table_name = table_name or model_class.__name__.lower()
 
         type_map = {
             str: "TEXT",
@@ -114,9 +121,11 @@ class PGDuckDBClient:
 
         column_defs = []
 
+        # .model_fields from the class directly
         for field_name, field_info in model_class.model_fields.items():
             python_type = field_info.annotation
 
+            # handle optional/union types
             if hasattr(python_type, "__origin__") and python_type.__origin__ is Union:
                 args = [t for t in python_type.__args__ if t is not type(None)]
                 actual_type = args[0] if args else str
@@ -124,10 +133,10 @@ class PGDuckDBClient:
                 actual_type = getattr(python_type, "__origin__", python_type)
 
             pg_type = type_map.get(actual_type, "TEXT")
-
             parts = [sql.Identifier(field_name), sql.SQL(pg_type)]
 
-            if field_name.lower() in ("id", "signature_hash"):
+            # apply constraints
+            if field_name.lower() in ("id"):
                 parts.append(sql.SQL("PRIMARY KEY"))
 
             if field_info.is_required():
@@ -135,97 +144,157 @@ class PGDuckDBClient:
 
             column_defs.append(sql.SQL(" ").join(parts))
 
-        create_query = sql.SQL("CREATE TABLE IF NOT EXISTS {table} ({fields})").format(
-            table=sql.Identifier(table_name),
-            fields=sql.SQL(", ").join(column_defs),
-        )
+        # define identifiers for "schema"."table"
+        schema_ident = sql.Identifier(schema_name)
+        table_ident = sql.Identifier(schema_name, actual_table_name)
 
         with self.pool.connection() as conn:
+            conn.execute(sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(schema_ident))
+            create_query = sql.SQL(
+                "CREATE TABLE IF NOT EXISTS {table} ({fields})"
+            ).format(
+                table=table_ident,
+                fields=sql.SQL(", ").join(column_defs),
+            )
             conn.execute(create_query)
+
+            # column comments based on Pydantic field descriptions
             for field_name, field_info in model_class.model_fields.items():
                 if field_info.description:
                     comment_query = sql.SQL(
                         "COMMENT ON COLUMN {table}.{column} IS {comment}"
                     ).format(
-                        table=sql.Identifier(table_name),
+                        table=table_ident,
                         column=sql.Identifier(field_name),
                         comment=sql.Literal(field_info.description),
                     )
                     conn.execute(comment_query)
 
-            logger.info(f"Successfully verified/created table: {table_name}")
+            logger.info(
+                f"Successfully verified/created table: {schema_name}.{actual_table_name}"
+            )
 
-    def insert_model(self, table_name: str, model: BaseModel):
+    def insert_model(
+        self,
+        table_name: str,
+        model: BaseModel,
+        schema_name: str = "duckdb",
+    ):
+        """_summary_
+
+        :param table_name: _description_
+        :param model: _description_
+        :param schema_name: _description_, defaults to "duckdb"
+        """
         data = model.model_dump()
-        for key, value in data.items():
-            if isinstance(value, (list, dict)):
-                data[key] = Jsonb(value)
+        columns = list(data.keys())
 
-        columns = data.keys()
-        placeholders = [f"%({col})s" for col in columns]
-        query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({', '.join(placeholders)})"
+        values = [Jsonb(v) if isinstance(v, (list, dict)) else v for v in data.values()]
+
+        # handling reserved keywords
+        query = sql.SQL("INSERT INTO {table} ({fields}) VALUES ({values})").format(
+            table=sql.Identifier(schema_name, table_name),
+            fields=sql.SQL(", ").join(map(sql.Identifier, columns)),
+            values=sql.SQL(", ").join(sql.Placeholder() * len(columns)),
+        )
 
         with self.pool.connection() as conn:
-            conn.execute(query, data)
+            conn.execute(query, values)
 
     def batch_insert_models(
         self,
         table_name: str,
         models: List[BaseModel],
         chunk_size: int = 5000,
+        schema_name: str = "duckdb",
+    ):
+        if not models:
+            return
+
+        # access .model_fields from the class
+        model_class = type(models[0])
+        columns = list(model_class.model_fields.keys())
+
+        query = sql.SQL("COPY {table} ({fields}) FROM STDIN").format(
+            table=sql.Identifier(schema_name, table_name),
+            fields=sql.SQL(", ").join(map(sql.Identifier, columns)),
+        )
+
+        with self.pool.connection() as conn:
+            with conn.transaction():
+                with conn.cursor() as cur:
+                    for i in range(0, len(models), chunk_size):
+                        chunk = models[i : i + chunk_size]
+                        with cur.copy(query) as copy:
+                            for m in chunk:
+                                row = [
+                                    Jsonb(v) if isinstance(v, (list, dict)) else v
+                                    for v in m.model_dump(mode="python").values()
+                                ]
+                                copy.write_row(row)
+
+                        logger.info(
+                            f"Inserted chunk into {schema_name}.{table_name}: "
+                            f"{min(i + chunk_size, len(models))}/{len(models)}"
+                        )
+
+    def query(
+        self,
+        query_sql: str,
+        params: Any = None,
+        peek: bool = True,
+        schema_name: str = "duckdb",
+    ) -> Any:
+        """
+        Executes a query. If schema_name is provided, it sets the search_path
+        for this session to prioritize that schema.
+        """
+        with self.pool.connection() as conn:
+            conn.row_factory = dict_row
+
+            # set the search path so raw SQL doesn't need "schema." prefixes
+            if schema_name:
+                conn.execute(
+                    sql.SQL("SET search_path TO {}, public").format(
+                        sql.Identifier(schema_name)
+                    )
+                )
+
+            cur = conn.execute(query_sql, params)
+
+            # do your thing
+            if not peek and cur.description is not None:
+                return cur.fetchall()
+
+            # peek
+            return cur.rowcount
+
+    def drop_table(
+        self,
+        table_name: str,
+        schema_name: str = "duckdb",
+        cascade: bool = True,
     ):
         """_summary_
 
         :param table_name: _description_
-        :param models: _description_
-        :param chunk_size: _description_, defaults to 5000
+        :param schema_name: _description_, defaults to "duckdb"
+        :param cascade: _description_, defaults to True
         """
-        if not models:
-            return
+        query = sql.SQL("DROP TABLE IF EXISTS {table} {cascade}").format(
+            table=sql.Identifier(schema_name, table_name),
+            cascade=sql.SQL("CASCADE") if cascade else sql.SQL(""),
+        )
 
-        columns = list(models[0].model_dump().keys())
-        sql = f"COPY {table_name} ({', '.join(columns)}) FROM STDIN"
-
-        for i in range(0, len(models), chunk_size):
-            chunk = models[i : i + chunk_size]
+        try:
             with self.pool.connection() as conn:
-                with conn.cursor() as cur:
-                    with cur.copy(sql) as copy:
-                        for m in chunk:
-                            row = []
-                            for v in m.model_dump().values():
-                                row.append(
-                                    Jsonb(v) if isinstance(v, (list, dict)) else v
-                                )
-                            copy.write_row(row)
-            logger.info(f"Finished chunk: {i + len(chunk)} records total.")
-
-    def query(
-        self,
-        sql: str,
-        params: Any = None,
-        peek: bool = True,
-    ) -> Any:
-        """_summary_
-
-        :param sql: _description_
-        :param params: _description_, defaults to None
-        :param peek: _description_, defaults to True
-        :return: _description_
-        """
-
-        with self.pool.connection() as conn:
-            # (column_name: value)
-            conn.row_factory = dict_row
-
-            cur = conn.execute(sql, params)
-
-            # do the real deal
-            if not peek and cur.description is not None:
-                return cur.fetchall()
-
-            # just take a peek
-            return cur.rowcount
+                conn.execute(query)
+                logger.info(
+                    f"Successfully dropped table (if it existed): {schema_name}.{table_name}"
+                )
+        except Exception as e:
+            logger.error(f"Failed to drop table {schema_name}.{table_name}: {e}")
+            raise
 
     def close(self):
         """Shut down the pool when the app exits"""

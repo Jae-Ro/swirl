@@ -26,11 +26,7 @@ docker compose up
 
 ## Demo
 
-After following the Developer Quickstart `docker compose up`, start the dummy customer api.
-
-```bash
-python app/dummy_customer_api.py
-```
+The customer dummy api is a service running via docker compose on `localhost:5001`. 
 
 Navigate to [http://localhost:3000](http://localhost:3000) and ask your queries there!
 

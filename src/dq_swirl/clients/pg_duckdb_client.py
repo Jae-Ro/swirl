@@ -1,4 +1,5 @@
 import os
+import uuid
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Any, Generator, List, Optional, Type, Union
@@ -174,28 +175,73 @@ class PGDuckDBClient:
                 f"Successfully verified/created table: {schema_name}.{actual_table_name}"
             )
 
+    def get_table_schema_description(
+        self,
+        table_name: str,
+        schema_name: str = "duckdb",
+    ) -> str:
+        """_summary_
+
+        :param table_name: _description_
+        :param schema_name: _description_, defaults to "duckdb"
+        :return: _description_
+        """
+
+        # get table schema and column descriptions
+        query = sql.SQL("""
+            SELECT 
+                cols.column_name, 
+                cols.data_type, 
+                cols.is_nullable,
+                (
+                    SELECT pg_catalog.col_description(c.oid, cols.ordinal_position::int)
+                    FROM pg_catalog.pg_class c
+                    WHERE c.relname = cols.table_name
+                    AND c.relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = cols.table_schema)
+                ) as column_comment
+            FROM information_schema.columns cols
+            WHERE cols.table_schema = {schema}
+            AND cols.table_name = {table}
+            ORDER BY cols.ordinal_position;
+        """).format(schema=sql.Literal(schema_name), table=sql.Literal(table_name))
+
+        with self.pool.connection() as conn:
+            conn.row_factory = dict_row
+            rows = conn.execute(query).fetchall()
+
+        if not rows:
+            return f"Table {schema_name}.{table_name} not found."
+
+        # build markdown string
+        lines = [f"TABLE NAME:\n{schema_name}.{table_name}\n", "TABLE COLUMNS:"]
+        for r in rows:
+            null_str = " (Nullable)" if r["is_nullable"] == "YES" else " (NOT NULL)"
+            comment = f" = {r['column_comment']}" if r["column_comment"] else ""
+            lines.append(f"* {r['column_name']} ({r['data_type']}){null_str}{comment}")
+
+        return "\n".join(lines)
+
     def insert_model(
         self,
         table_name: str,
         model: BaseModel,
         schema_name: str = "duckdb",
+        conflict_target: str = "id",  # The column(s) that define a duplicate
     ):
-        """_summary_
-
-        :param table_name: _description_
-        :param model: _description_
-        :param schema_name: _description_, defaults to "duckdb"
-        """
         data = model.model_dump()
         columns = list(data.keys())
-
         values = [Jsonb(v) if isinstance(v, (list, dict)) else v for v in data.values()]
 
-        # handling reserved keywords
-        query = sql.SQL("INSERT INTO {table} ({fields}) VALUES ({values})").format(
+        # SQL with ON CONFLICT DO NOTHING (skips duplicates)
+        query = sql.SQL("""
+            INSERT INTO {table} ({fields}) 
+            VALUES ({placeholders})
+            ON CONFLICT ({target}) DO NOTHING
+        """).format(
             table=sql.Identifier(schema_name, table_name),
             fields=sql.SQL(", ").join(map(sql.Identifier, columns)),
-            values=sql.SQL(", ").join(sql.Placeholder() * len(columns)),
+            placeholders=sql.SQL(", ").join(sql.Placeholder() * len(columns)),
+            target=sql.Identifier(conflict_target),
         )
 
         with self.pool.connection() as conn:
@@ -208,24 +254,43 @@ class PGDuckDBClient:
         chunk_size: int = 5000,
         schema_name: str = "duckdb",
     ):
+        """_summary_
+
+        :param table_name: _description_
+        :param models: _description_
+        :param chunk_size: _description_, defaults to 5000
+        :param schema_name: _description_, defaults to "duckdb"
+        """
         if not models:
             return
 
-        # access .model_fields from the class
         model_class = type(models[0])
         columns = list(model_class.model_fields.keys())
 
-        query = sql.SQL("COPY {table} ({fields}) FROM STDIN").format(
-            table=sql.Identifier(schema_name, table_name),
-            fields=sql.SQL(", ").join(map(sql.Identifier, columns)),
-        )
+        target_table = sql.Identifier(schema_name, table_name)
+        temp_table_name = f"tmp_{table_name}_{uuid.uuid4().hex[:8]}"
+        temp_table = sql.Identifier(temp_table_name)
 
         with self.pool.connection() as conn:
             with conn.transaction():
                 with conn.cursor() as cur:
+                    # 1. Create the temp table
+                    cur.execute(
+                        sql.SQL("CREATE TEMP TABLE {temp} (LIKE {target})").format(
+                            temp=temp_table,
+                            target=target_table,
+                        )
+                    )
+
+                    # bulk copy into temp
+                    copy_query = sql.SQL("COPY {temp} ({fields}) FROM STDIN").format(
+                        temp=temp_table,
+                        fields=sql.SQL(", ").join(map(sql.Identifier, columns)),
+                    )
+
                     for i in range(0, len(models), chunk_size):
                         chunk = models[i : i + chunk_size]
-                        with cur.copy(query) as copy:
+                        with cur.copy(copy_query) as copy:
                             for m in chunk:
                                 row = [
                                     Jsonb(v) if isinstance(v, (list, dict)) else v
@@ -233,10 +298,22 @@ class PGDuckDBClient:
                                 ]
                                 copy.write_row(row)
 
-                        logger.info(
-                            f"Inserted chunk into {schema_name}.{table_name}: "
-                            f"{min(i + chunk_size, len(models))}/{len(models)}"
-                        )
+                    # find rows in temp that aren't in target
+                    merge_query = sql.SQL("""
+                        INSERT INTO {target} ({fields})
+                        SELECT {fields} FROM {temp}
+                        EXCEPT
+                        SELECT {fields} FROM {target}
+                    """).format(
+                        target=target_table,
+                        temp=temp_table,
+                        fields=sql.SQL(", ").join(map(sql.Identifier, columns)),
+                    )
+                    cur.execute(merge_query)
+
+                    logger.info(
+                        f"Deduplicated (Set-based) insert complete for {schema_name}.{table_name}"
+                    )
 
     def query(
         self,

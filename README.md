@@ -29,7 +29,7 @@ docker compose up
 After following the Developer Quickstart `docker compose up`, start the dummy customer api.
 
 ```bash
-python dummy_customer_api.py
+python app/dummy_customer_api.py
 ```
 
 Navigate to [htttp://localhost:3000](htttp://localhost:3000) and ask your queries there!

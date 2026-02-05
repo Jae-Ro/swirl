@@ -42,6 +42,10 @@ While you have docker compose running in one terminal, in another run the follow
 pytest -v -s tests/
 ```
 
+**NOTE**: If you would like a hard schema reset, you can open redis insights [http://localhost:5540](http://localhost:5540) and delete the keys within the prefix `etl:`
+
+![redis-keys](docs/redis_keys.png)
+
 
 ## System Architecture
 ![system architecture](docs/sa_diagram.drawio.svg)

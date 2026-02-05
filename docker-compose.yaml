@@ -29,6 +29,18 @@ services:
       - ./src/:/app/src/
       - ./app/:/app/app/
   
+  customer:
+    container_name: app-customer
+    build:
+      context: .
+      dockerfile: app/Dockerfile.customer
+    image: app-customer:latest
+    entrypoint: ["hypercorn", "app/dummy_customer_api:app", "--bind", "0.0.0.0:5001", "--reload"]
+    ports: ["5001:5001"]
+    restart: unless-stopped
+    volumes:
+      - ./app/:/app/app/
+  
   worker:
     container_name: app-worker
     build:
@@ -48,6 +60,8 @@ services:
       AWS_SECRET_ACCESS_KEY: password
       AWS_ACCESS_KEY_ID: admin
       AWS_REGION: us-east-1
+      POSTGRES_HOST: postgres
+      
     restart: unless-stopped
     volumes:
       - ./src/:/app/src/

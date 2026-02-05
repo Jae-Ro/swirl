@@ -43,7 +43,7 @@ async def run_dq_agent_task(ctx: Dict[str, Any], data: Dict[str, Any]):
 
         # TODO: make this a dataclass
         request_config = {
-            "url": "http://localhost:5001/api/orders",
+            "url": "http://customer:5001/api/orders",
             "method": "GET",
             "request_body": None,
         }

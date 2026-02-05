@@ -36,16 +36,18 @@ Navigate to [http://localhost:3000](http://localhost:3000) and ask your queries 
 
 ![example_query](docs/example.png)
 
-## Run Test Suite
-While you have docker compose running in one terminal, in another run the following:
-```bash
-pytest -v -s tests/
-```
+**NOTE**: The very first query will likely take about 2.5min to complete, but subsequent queries (doesn't have to be the same) should be in seconds. The assumption is that the underlying structure is the same. Once the structure changes, the system will try and adapt.
 
 **NOTE**: If you would like a hard schema reset, you can open redis insights [http://localhost:5540](http://localhost:5540) and delete the keys within the prefix `etl:`
 
 ![redis-keys](docs/redis_keys.png)
 
+
+## Run Test Suite
+While you have docker compose running in one terminal, in another run the following:
+```bash
+pytest -v -s tests/
+```
 
 ## System Architecture
 ![system architecture](docs/sa_diagram.drawio.svg)

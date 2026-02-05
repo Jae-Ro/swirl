@@ -6,6 +6,7 @@ import litellm
 from dotenv import load_dotenv
 from redis.asyncio import ConnectionPool, Redis
 from saq import CronJob, Queue
+from sentence_transformers import SentenceTransformer
 
 from dq_swirl.clients.async_httpx_client import create_async_httpx_client_pool
 from dq_swirl.tasks.agent_tasks import run_dq_agent_task
@@ -50,6 +51,10 @@ async def startup(ctx: Dict[str, Any]):
     )
     # add redis pool to context dict
     ctx["redis_pool"] = redis_pool
+
+    # sentence transformer model
+    model = SentenceTransformer("all-MiniLM-L6-v2", cache_folder="./.models")
+    ctx["embedding_model"] = model
 
 
 async def shutdown(ctx: Dict[str, Any]):

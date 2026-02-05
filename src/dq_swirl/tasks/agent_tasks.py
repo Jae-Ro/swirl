@@ -33,12 +33,26 @@ async def run_dq_agent_task(ctx: Dict[str, Any], data: Dict[str, Any]):
         ## get messages from (user_id, conversation_id)
 
         ## do work
+        embedding_model = ctx["embedding_model"]
 
         orchestrator = DQAgentOrchestrator(
             client=llm_client,
             redis=redis,
+            embedding_model=embedding_model,
         )
-        async for chunk in orchestrator.run():
+
+        # TODO: make this a dataclass
+        request_config = {
+            "url": "http://localhost:5001/api/orders",
+            "method": "GET",
+            "request_body": None,
+        }
+
+        async for chunk in orchestrator.run(
+            request_config,
+            user_query,
+            data_key="raw_orders",
+        ):
             await redis.publish(req.pubsub_stream_id, chunk)
 
     except Exception as e:

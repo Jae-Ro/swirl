@@ -26,8 +26,8 @@ COPY pyproject.toml Cargo.toml README.md ./
 RUN uv tool install maturin
 ENV PATH="/root/.local/bin:$PATH" 
 
-RUN uv sync --extra app && maturin develop --release
-RUN uv pip list
+RUN uv build
+RUN uv sync --extra app
 
 FROM python:3.14-slim AS final
 
@@ -39,11 +39,14 @@ RUN useradd -m appuser
 
 WORKDIR /app
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 COPY --from=builder --chown=appuser:appuser /app /app
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH="/app/.venv/lib/python3.14/site-packages" \
     PYTHONUNBUFFERED=1
+
+RUN uv pip install ./dist/*.whl --no-deps --no-cache
 
 USER appuser
 

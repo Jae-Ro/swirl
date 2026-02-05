@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.local/bin:/root/.cargo/bin:$PATH"
 
-
 # uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -19,7 +18,6 @@ ENV UV_COMPILE_BYTECODE=1 \
 WORKDIR /app
 RUN uv venv
 
-
 COPY worker/ ./worker/
 COPY src/ ./src/
 COPY rust/ ./rust/
@@ -28,8 +26,8 @@ COPY pyproject.toml Cargo.toml README.md ./
 RUN uv tool install maturin
 ENV PATH="/root/.local/bin:$PATH" 
 
-RUN uv sync --extra worker && maturin develop --release
-RUN uv pip list
+RUN uv build
+RUN uv sync --extra worker
 
 FROM python:3.14-slim AS final
 
@@ -41,11 +39,14 @@ RUN useradd -m appuser
 
 WORKDIR /app
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 COPY --from=builder --chown=appuser:appuser /app /app
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH="/app/.venv/lib/python3.14/site-packages" \
     PYTHONUNBUFFERED=1
+
+RUN uv pip install ./dist/*.whl --no-deps --no-cache
 
 USER appuser
 

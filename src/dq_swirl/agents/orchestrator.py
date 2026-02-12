@@ -472,6 +472,7 @@ class DQAgentOrchestrator:
             return {
                 "error": err_msg,
                 "attempts": 1,
+                "step_result": ret,
             }
 
     async def validate_query(self, state: AgentOrchestratorState):
@@ -480,7 +481,7 @@ class DQAgentOrchestrator:
         attempts = state["attempts"]
 
         # data sourcer did not work
-        if not res and err_msg:
+        if err_msg:
             if attempts > self.max_attempts:
                 return "end"
             return "retry"
